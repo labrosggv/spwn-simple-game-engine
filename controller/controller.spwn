@@ -1,0 +1,82 @@
+gamescene = import gamescene
+dir = counter(bits=3)
+dir = 0
+can_move = counter(true)
+player = 1g
+speed = 10
+anchors = [2g, 3g, 4g, 5g]
+selector = 6g
+collider = 7g
+player_id = 1b
+level = 2b
+collided = counter(false)
+start_dir = counter(dir)
+
+selector.move_to(anchors[0])
+
+select = !{
+    dir += 1
+    if dir >= anchors.length{
+        dir = 0
+    }
+    current_anchor = anchors[dir.to_const(0..4)]
+    selector.move_to(current_anchor)
+}
+
+move_components = (speed_x : @number, speed_y : @number, time : @number) {
+    ->player.move(speed_x, speed_y, time)
+    for i in 0..anchors.length {
+        ->anchors[i].move(speed_x, speed_y, time)
+    }
+    ->selector.move(speed_x, speed_y, time)
+    collider.move(speed_x, speed_y, time)
+    can_move = true
+}
+
+disable_movement = !{
+    can_move = false
+}
+
+move = !{
+    match dir {
+        ==0: () {
+            move_components(speed, 0, 0.25)
+        }(),
+        ==1: () {
+            move_components(0 ,speed, 0.25)
+        }(),
+        ==2: () {
+            move_components(-speed, 0, 0.25)
+        }(),
+        ==3: () {
+            move_components(0, -speed, 0.25)
+        }()
+    }
+}
+
+on(gamescene.button_a(), !{
+    select!
+})
+
+on(gamescene.button_b(), !{
+    if @bool(can_move) && @bool(collided) == false {
+        disable_movement!
+        move!
+    }
+})
+
+on(collision(1b, 2b), !{
+    collided = true
+    disable_movement!
+    start_dir = dir
+    dir = match dir.to_const(0..4) {
+        ==0: 2,
+        ==1: 3,
+        ==2: 0,
+        ==3: 1,
+    }
+    move!
+    dir = start_dir
+    wait(0.4)
+    collided = false
+})
