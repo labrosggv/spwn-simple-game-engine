@@ -33,41 +33,27 @@ move_components = (speed_x : @number, speed_y : @number, time : @number) {
     can_move = true
 }
 
-disable_movement = !{
-    can_move = false
-}
-
 move = !{
     match dir {
-        ==0: () {
-            move_components(speed, 0, 0.25)
-        }(),
-        ==1: () {
-            move_components(0 ,speed, 0.25)
-        }(),
-        ==2: () {
-            move_components(-speed, 0, 0.25)
-        }(),
-        ==3: () {
-            move_components(0, -speed, 0.25)
-        }()
+        ==0: move_components(speed, 0, 0.25),
+        ==1: move_components(0 ,speed, 0.25),
+        ==2: move_components(-speed, 0, 0.25),
+        ==3: move_components(0, -speed, 0.25)
     }
 }
 
-on(gamescene.button_a(), !{
-    select!
-})
+on(gamescene.button_a(), select)
 
 on(gamescene.button_b(), !{
     if @bool(can_move) && @bool(collided) == false {
-        disable_movement!
+        can_move = false
         move!
     }
 })
 
 on(collision(1b, 2b), !{
     collided = true
-    disable_movement!
+    can_move = false
     start_dir = dir
     dir = match dir.to_const(0..4) {
         ==0: 2,
